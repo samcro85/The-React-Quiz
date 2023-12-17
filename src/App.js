@@ -11,6 +11,7 @@ const initialState = {
 
   // 'loading', 'error', 'ready', 'active', 'finished'
   status: "loading",
+  index: 0
 };
 
 const reducer = function (state, action) {
@@ -38,7 +39,8 @@ const reducer = function (state, action) {
 
 function App() {
   // useReducer per creare ed aggiornare gli state
-  const [{ question, status }, dispatch] = useReducer(reducer, initialState);
+  // destrutturiamo lo state con le proprietà che ci servono
+  const [{ question, status, index }, dispatch] = useReducer(reducer, initialState);
 
   const numQuestions = question.length
   // useEffect per fare la richiesta al server
@@ -65,7 +67,7 @@ function App() {
         {status === "loading" && <Loader />}
         {status === "error" && <Error />}
         {status === "ready" && <StartScreen questions={numQuestions} dispatch={dispatch}/>}
-        {status === 'active' && <Question />}
+        {status === 'active' && <Question questions={question[index]}/>}
 
       </Main>
     </div>
