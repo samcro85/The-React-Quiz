@@ -1,13 +1,19 @@
-import Options from "./component/Options"
+import Options from "./component/Options";
 
-function Question({questions}) {
-   const {question, options, correctOption, points} = questions
-    return (
-        <div>
-           <h4>{question}</h4> 
-           <Options options={options}/>
-        </div>
-    )
+function Question({ questions, dispatch, answer }) {
+  const { question, options, correctOption } = questions;
+  console.log(questions);
+  return (
+    <div>
+      <h4>{question}</h4>
+      <Options
+        options={options}
+        dispatch={dispatch}
+        answer={answer}
+        correctOpt={correctOption}
+      />
+    </div>
+  );
 }
 
-export default Question
+export default Question;

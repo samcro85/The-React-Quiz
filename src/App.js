@@ -5,13 +5,17 @@ import Loader from "./Loader";
 import Error from "./Loader";
 import StartScreen from "./StartScreen";
 import Question from "./Question";
+import NextButton from "./component/NextButton";
+import Progress from "./component/Progress";
 
 const initialState = {
-  question: [],
+  questions: [],
 
   // 'loading', 'error', 'ready', 'active', 'finished'
   status: "loading",
-  index: 0
+  index: 0,
+  answer: null,
+  points: 0,
 };
 
 const reducer = function (state, action) {
@@ -19,7 +23,7 @@ const reducer = function (state, action) {
     case "dataReceived":
       return {
         ...state,
-        question: action.payload,
+        questions: action.payload,
         status: "ready",
       };
     case "dataFailed":
@@ -27,11 +31,28 @@ const reducer = function (state, action) {
         ...state,
         status: "error",
       };
-    case 'start':
+    case "start":
       return {
         ...state,
-        status: 'active'
-      }
+        status: "active",
+      };
+    case "newAnswer":
+      const question = state.questions.at(state.index);
+      console.log(question);
+      return {
+        ...state,
+        answer: action.payload,
+        points:
+          action.payload === question.correctOption
+            ? state.points + question.points
+            : state.points,
+      };
+    case "nextQuestion":
+      return {
+        ...state,
+        index: state.index++,
+        answer: null,
+      };
     default:
       throw new Error("Invalid request");
   }
@@ -40,9 +61,16 @@ const reducer = function (state, action) {
 function App() {
   // useReducer per creare ed aggiornare gli state
   // destrutturiamo lo state con le proprietà che ci servono
-  const [{ question, status, index }, dispatch] = useReducer(reducer, initialState);
+  const [{ questions, status, index, answer, points }, dispatch] = useReducer(
+    reducer,
+    initialState
+  );
 
-  const numQuestions = question.length
+  const numQuestions = questions.length;
+  const maxpoints = questions.reduce(
+    (acc, question) => acc + question.points,
+    0
+  );
   // useEffect per fare la richiesta al server
   useEffect(function () {
     async function getData() {
@@ -52,7 +80,6 @@ function App() {
         const data = await res.json();
         console.log(data);
         dispatch({ type: "dataReceived", payload: data });
-        console.log(data);
       } catch (e) {
         dispatch({ type: "dataFailed" });
       }
@@ -66,9 +93,26 @@ function App() {
       <Main>
         {status === "loading" && <Loader />}
         {status === "error" && <Error />}
-        {status === "ready" && <StartScreen questions={numQuestions} dispatch={dispatch}/>}
-        {status === 'active' && <Question questions={question[index]}/>}
-
+        {status === "ready" && (
+          <StartScreen questions={numQuestions} dispatch={dispatch} />
+        )}
+        {status === "active" && (
+          <>
+            <Progress
+              index={index}
+              numQuestions={numQuestions}
+              points={points}
+              maxpoints={maxpoints}
+              answer={answer}
+            />
+            <Question
+              questions={questions[index]}
+              dispatch={dispatch}
+              answer={answer}
+            />
+            <NextButton dispatch={dispatch} answer={answer} />
+          </>
+        )}
       </Main>
     </div>
   );
