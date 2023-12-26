@@ -8,7 +8,10 @@ import Question from "./Question";
 import NextButton from "./component/NextButton";
 import Progress from "./component/Progress";
 import FinishScreen from "./component/FinishScreen";
+import Timer from "./component/Timer";
+import Footer from "./component/Footer";
 
+const SECS_PER_QUESTION = 30
 const initialState = {
   questions: [],
 
@@ -18,6 +21,7 @@ const initialState = {
   answer: null,
   points: 0,
   highScore: 0,
+  secondsRemaining: null
 };
 
 const reducer = function (state, action) {
@@ -37,6 +41,7 @@ const reducer = function (state, action) {
       return {
         ...state,
         status: "active",
+        secondsRemaining: state.questions.length * SECS_PER_QUESTION  
       };
     case "newAnswer":
       const question = state.questions.at(state.index);
@@ -70,6 +75,12 @@ const reducer = function (state, action) {
         status: "ready",
       };
 
+      case "tick":
+        return {
+          ...state,
+          secondsRemaining: state.secondsRemaining--,
+          status: state.secondsRemaining === 0 ? 'finished': state.status
+        }
     default:
       throw new Error("Invalid request");
   }
@@ -78,7 +89,7 @@ const reducer = function (state, action) {
 function App() {
   // useReducer per creare ed aggiornare gli state
   // destrutturiamo lo state con le proprietà che ci servono
-  const [{ questions, status, index, answer, points, highScore }, dispatch] =
+  const [{ questions, status, index, answer, points, highScore, secondsRemaining }, dispatch] =
     useReducer(reducer, initialState);
 
   const numQuestions = questions.length;
@@ -125,12 +136,15 @@ function App() {
               dispatch={dispatch}
               answer={answer}
             />
-            <NextButton
-              dispatch={dispatch}
-              answer={answer}
-              index={index}
-              numQuestions={numQuestions}
-            />
+            <Footer>
+              <Timer dispatch={dispatch} secondsRemaining={secondsRemaining}/>
+              <NextButton
+                dispatch={dispatch}
+                answer={answer}
+                index={index}
+                numQuestions={numQuestions}
+              />
+            </Footer>
           </>
         )}
         {status === "finished" && (
